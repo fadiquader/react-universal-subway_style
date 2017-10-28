@@ -1,0 +1,33 @@
+/* eslint-disable no-unused-vars */
+const express = require('express');
+const rxFirebase = require('rx-firebase');
+const firebase = require('firebase-admin');
+const Observable = require('rxjs').Observable;
+
+rxFirebase.extend(firebase, Observable);
+firebase.initializeApp({
+  databaseURL: 'https://smart-hands-1214f.firebaseio.com',
+  storageBucket: 'smart-hands-1214f.appspot.com',
+  // credential: firebase.credential.cert(require('../path-to-firebase-adminsdk.json')),
+  credential: firebase.credential.applicationDefault(),
+  // credential: firebase.credential.cert({
+  //     projectId: "smart-hands-1214f",
+  //     clientEmail: "foo@<PROJECT_ID>.iam.gserviceaccount.com",
+  //     privateKey: "-----BEGIN PRIVATE KEY-----\n<KEY>\n-----END PRIVATE KEY-----\n"
+  // }),
+});
+
+const db = firebase.database();
+const bucket = firebase.storage().bucket(); // for storage usage
+const router = express.Router();
+
+router.get('/data', (req, res) => {
+  const ref = db.ref('/test');
+  ref.set({ a: 1, b: 2, c: 3 }).then(() => {
+    ref.observe('child_added').take(3).subscribe({
+      complete: () => res.send({ msg: 'Raised on hip-hop and foster care, defiant city kid Ricky gets a fresh start in the New Zealand countryside. He quickly finds himself at home with his new foster family' }),
+    });
+  });
+});
+
+module.exports = router;
