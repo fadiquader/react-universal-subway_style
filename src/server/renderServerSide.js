@@ -5,18 +5,27 @@ import { resolve } from 'path';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
 import { StaticRouter, Route, Switch, matchPath } from 'react-router-dom';
+import createHistory from 'history/createMemoryHistory';
 import sass from 'node-sass';
+// import less from 'node-less';
 import _ from 'lodash';
 import serialize from 'serialize-javascript';
 import routes from '../routes';
 import helmetconfig from '../appConfig';
 import configureStore from '../redux/store';
+import { authActions } from '../redux/reducers/auth';
+// import 'antd/dist/antd.less';
 
 const theme = sass.renderSync({
   file: 'node_modules/grommet/scss/vanilla/index.scss',
   includePaths: [resolve(__dirname, '../../node_modules')],
   outputStyle: 'compressed',
 });
+// const theme = less.renderSync({
+//   file: 'node_modules/antd/dist/antd.less',
+//   includePaths: [resolve(__dirname, '../../node_modules')],
+//   outputStyle: 'compressed',
+// });
 
 const renderFullPage = (html, preloadedState) => {
   const head = Helmet.rewind();
@@ -52,10 +61,14 @@ const renderFullPage = (html, preloadedState) => {
 };
 
 function serverRender(req, res) {
-  const store = configureStore();
+  const history = createHistory();
+  const store = configureStore(history);
   const loadRouteData = () => {
+    const initState = store.getState();
     const promises = [];
-
+    if(!initState.auth.authenticated && req.user){
+      promises.push(store.dispatch(authActions.authenticate(req.user)))
+    }
     routes.some((route) => {
       const match = matchPath(req.url, route);
       if (match && route.loadData) promises.push(route.loadData(store.dispatch, match.params));

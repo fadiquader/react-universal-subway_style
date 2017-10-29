@@ -36,7 +36,11 @@ module.exports = (passport) => {
   }, (token, tokenSecret, profile, done) => {
     process.nextTick(() => {
       console.log(profile);
-      return done(null, profile);
+      const user = {
+        id: profile.id,
+        displayName: profile.displayName,
+      };
+      return done(null, user);
     });
   }));
 
